@@ -6,3 +6,6 @@ onedrive
 .Rproj.user
 .Rhistory
 keynote.savedSearch
+.ipynb_checkpoints
+*.html
+*_files/
