@@ -10,6 +10,12 @@ packages = [{include = "23_ds"}]
 python = "^3.10"
 notebook = "^6.5.4"
 jupyterlab = "^3.6.3"
+jupytext = "^1.14.5"
+nbdev = "^2.3.12"
+jupyterlab-quarto = "^0.1.45"
+jupyterlab-code-formatter = "^1.6.1"
+black = "^23.3.0"
+isort = "^5.12.0"
 
 
 [build-system]
