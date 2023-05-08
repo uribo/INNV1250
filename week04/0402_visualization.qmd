@@ -1,0 +1,168 @@
+---
+title: 分布を視覚化する
+keep-ipynb: true
+jupyter:
+  jupytext:
+    formats: 'ipynb,qmd'
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: '1.0'
+      jupytext_version: 1.14.5
+  kernelspec:
+    display_name: R
+    language: R
+    name: ir
+---
+
+```{r}
+#| eval: false
+#| echo: true
+# パッケージのインストール
+install.packages(c("patchwork", "palmerpenguins"))
+```
+
+```{r}
+#| label: パッケージの読み込み
+library(tidyverse)
+library(patchwork) # グラフの配置を調整するために利用
+library(palmerpenguins) # ペンギンデータを利用
+```
+
+```{r}
+#| label: 動物データの読み込み
+df_animal <-
+  readr::read_csv("https://raw.githubusercontent.com/uribo/tokupon_ds/main/data-raw/tokushima_zoo_animals22.csv", col_types = "ccdd")
+```
+
+[0401_summary_statistics.ipynb](0401_summary_statistics.ipynb)で、要約統計量を計算することで、データの特徴について理解を深めることができました。一方、要約統計量ではデータの全体像を十分に把握しきれない場合があります。例えば、平均値と標準偏差を計算したとしても、データがどのような分布をしているのかはわかりません。データの分布について知るためにはグラフの作成が効果的です。ここではデータの分布を視覚化し、データの全体像を把握するための手法である**ヒストグラム**と**箱ヒゲ図**について学びます。
+
+## ヒストグラム
+
+ヒストグラムは、データの分布を視覚的に表現するためのグラフの一種です。データが取り得る値をいくつかの区間に分割した「階級」を設定し、横軸に階級、縦軸に階級ごとの度数に応じた長さの長方形の「柱」を並べることでデータの分布を視覚的に扱います。一つのグラフの中から多数の情報が得られることがあり、データの特徴を把握するためには欠かせないグラフとなっています。
+
+ヒストグラムを作成するには、まずはデータを階級に分割する必要があります。階級の幅は、データの値に応じて決めるのが一般的です。階級の幅が広すぎるとデータの分布を正確に表現できず、階級の幅が狭すぎるとデータの特徴を把握することができなくなってしまいます。
+
+```{r}
+#| fig-cap: 階級数によってヒストグラムの見た目は変わる
+p1 <-
+  penguins |> 
+  ggplot(aes(body_mass_g)) +
+  geom_histogram(bins = 2, fill = "#0cb3d1") +
+  ylab("Frequency") +
+  xlab("Body mass (g)") +
+  labs(title = "ペンギンの体重のヒストグラム。階級数2")
+p2 <-
+  penguins |> 
+  ggplot(aes(body_mass_g)) +
+  geom_histogram(bins = 30, fill = "#f25d02") +
+  ylab("Frequency") +
+  xlab("Body mass (g)") +
+  labs(title = "ペンギンの体重のヒストグラム。階級数30")
+
+p1 + p2 + plot_layout(ncol = 2)
+```
+
+階級の幅は、データの分布によって決める必要があります。階級の幅は、データの分布によって決める必要があります。階級の幅は、データの分布によって決める必要があります。階級の幅は、データの分布によって決める必要があります。階級の幅は、データの分布によって決める必要があります。階級の幅は、データの分布によって決める必要があります。階級の幅は、データの分布によって決める必要があります。
+
+### 度数分布表
+
+```{r}
+# ペンギンの体重について、階級幅を1000として度数分布表を作成する
+weight_freq <- 
+  table(cut(penguins$body_mass_g, 
+            breaks = seq(2000, 
+                         7000, 
+                         by = 1000),
+            dig.lab = 4))
+tibble::tibble(
+  class = names(weight_freq),
+  frequency = weight_freq)
+```
+
+### ヒストグラムの作成
+
+```{r}
+p <- 
+  penguins |> 
+  ggplot(aes(body_mass_g)) +
+  # ヒストグラムでは柱の階級をビン bin と呼ぶ
+  geom_histogram(bins = 5) +
+  ylab("Frequency") +
+  xlab("Body mass (g)") +
+  labs(title = "ペンギンの体重のヒストグラム")
+
+p
+```
+
+ヒストグラムによって一眼で3000から4000の区間の個体が多いことが読み取れます。 全体のデータの散らばりの程度についても大まかに把握することができます。
+
+次に、ヒストグラムと要約統計量との関係を見てみましょう。これらの関係を見ることで、データに対する理解が深まります。
+
+```{r}
+p +
+  geom_vline(xintercept = mean(penguins$body_mass_g, na.rm = TRUE),
+             color = "#0cb3d1") +
+  geom_vline(xintercept = median(penguins$body_mass_g, na.rm = TRUE),
+             color = "#f25d02") +
+  geom_vline(xintercept = as.numeric(names(which.max(table(penguins$body_mass_g)))),
+             color = "#f9f5ff") +
+  geom_label(aes(4400, 20), 
+             label = "mean", 
+             color = "#0cb3d1",
+             show.legend = FALSE) +
+  geom_label(aes(4050, 50), 
+             label = "median", 
+             color = "#f25d02",
+             show.legend = FALSE) +
+  geom_label(aes(3600, 80), 
+             label = "mode", 
+             color = "#f9f5ff",
+             show.legend = FALSE)
+```
+
+この図からわかることは代表値の並びが小さい方から最頻値、中央値、平均値の順に並んでいることです。ヒストグラムの形が左に長く伸びている（この様子を「裾を引いている」と言います）場合、代表値はこの順番に並ぶことが多くなります。
+
+## 箱ヒゲ図
+
+ヒストグラムの他に、グラフを用いたデータの散らばりを表現する方法として箱ヒゲ図があります。四角い箱の上下に髭ひげが伸びているような図であることから箱ヒゲ図と呼ばれます。 「箱」と「ヒゲ」を使った簡単な図ですが、データの分布だけでなく、四分位点も合わせて表示できる図となっています。
+
+箱ヒゲ図の作成手順は次の通りです。 箱ヒゲ図を作成するときは、データの区間と四分位点を求めることが必要になります。
+
+1. まず最小値・最大値から、グラフの縦軸にデータの値が収まるような値を設定します。
+2. 第1四分位点と第3四分位点の区間（四分位範囲）を「箱」としてグラフ上に描画します。
+3. 中央値は第1四分位点と第3四分位点の間の値となりますので、箱の中に中央値を太い線で描きます。
+4. 箱から箱の長さ（四分位範囲）の1.5倍を超す値を外れ値として点で描きます。
+5. 箱の上端・下端から、外れ値でないものの最大値と最小値を線で結び「ヒゲ」を作ります。
+
+![箱ヒゲ図の見方と作り方](https://uribo.github.io/tokupon_ds/images/how_to_make_boxplot.png)
+
+動物データの体重について箱ヒゲ図を作成してみます。箱とヒゲについての意味を理解しておく必要がありますが、ヒストグラムのようにデータの分布を確認することができる図となっています。
+
+```{r}
+df_animal |> 
+  ggplot(aes(y = body_length_cm)) +
+  geom_boxplot() +
+  labs(title = "動物データの体重の箱ヒゲ図")
+```
+
+箱ヒゲ図は複数データのばらつきを比較する際にも役立ちます。ヒストグラムでは複数のデータを比較することが困難ですが、箱ヒゲ図では箱ヒゲを90度回転させて横に描画することで複数データの比較が容易になります。
+
+```{r}
+# 分類群ごとの箱ヒゲ図を描画
+# あらかじめ中央値を計算し、グラフ上では中央値の並びで分類群が表示されるように
+# 調整しています。
+df_animal |> 
+  filter(!is.na(body_length_cm)) |> 
+  group_by(taxon) |> 
+  mutate(body_length_median = median(body_length_cm)) |> 
+  ungroup() |> 
+  mutate(taxon = forcats::fct_reorder(taxon, body_length_median)) |> 
+  ggplot(aes(taxon, body_length_cm, color = taxon)) +
+  geom_boxplot() +
+  coord_flip() +
+  guides(color = "none") +
+  labs(title = "動物データの分類群ごとの体長の箱ヒゲ図")
+```
+
+この図は動物データの分類群ごとに体長の箱ヒゲ図を作成したものです。箱ヒゲ図ではデータの散らばりが小さい場合には小さくなり、逆に散らばりが大きい時には大きくなります。このことから、動物データに含まれる動物のうち、食肉類の体長は種の違いが大きく、霊長類は種のばらつきが小さいことが読み取れます。
