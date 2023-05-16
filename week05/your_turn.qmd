@@ -68,7 +68,7 @@ df_ssdse_b_shikoku <-
                 population = `人口・世帯_総人口`) |> 
   dplyr::mutate(prefecture = zipangu::convert_prefecture(prefecture, to = "roman"))
 
-head(df_ssdse_b_tokushima, n = 3)
+head(df_ssdse_b_shikoku, n = 3)
 ```
 
 ```{r}
