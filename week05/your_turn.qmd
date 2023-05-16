@@ -38,8 +38,8 @@ head(df_animal)
 ```
 
 - 動物データは `df_animal` としてデータフレーム形式で保存されている。
-- 体長は`body_length_cm`、体重は`body_weight_kg`として変数に記録されている。
-- 散布図はx軸に`body_length_cm`、y軸に`body_weight_kg`を与えること。
+- 体長は`body_length_cm`、体重は`weight_kg`として変数に記録されている。
+- 散布図はx軸に`body_length_cm`、y軸に`weight_kg`を与えること。
 
 
 ```{r}
