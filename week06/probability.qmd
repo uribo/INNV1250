@@ -1,0 +1,330 @@
+---
+title: データと確率
+keep-ipynb: true
+jupyter:
+  jupytext:
+    formats: 'ipynb,qmd'
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: '1.0'
+      jupytext_version: 1.14.5
+  kernelspec:
+    display_name: R
+    language: R
+    name: ir
+eval: true
+echo: true
+---
+
+
+## パッケージのインストールと読み込み
+
+```{r}
+library(dplyr, warn.conflicts = FALSE)
+library(ggplot2)
+```
+
+## 母集団と標本
+
+### 標本抽出
+
+無作為抽出法
+
+```{r}
+# 乱数を固定（結果に再現性をもたせるための処理）
+# set.seed()の行をコメントアウトすると、同じ値を得ることができなくなる
+set.seed(123)
+# 1から100までの整数を生成
+population <- seq.int(100)
+# 10個の標本を無作為に抽出（非復元抽出）
+sample <- sample(population, 10, replace = FALSE)
+sample
+```
+
+層化抽出法では、母集団を年齢や性別、職業などのいくつかの層に分け、各層から無作為抽出を行います。これにより、各層の特徴を反映した標本を得やすくなります。
+
+```{r}
+# irisのspeciesから10件ずつ抽出
+# コードを実行する度に異なる行が抽出されるが、Speciesごとに10件ずつ抽出は維持される
+iris_sample <- 
+  iris |> 
+  slice_sample(n = 10, 
+               replace = FALSE,
+               by = Species)
+
+# Species（層）ごとの件数を確認
+count(iris_sample, Species)
+```
+
+## 確率と確率変数
+
+### 確率関数
+
+サイコロ投げの確率分布は、1から6までの整数が等確率で出る一様分布です。サイコロの出る目とその確率を表にまとめると以下のようになります。
+
+| 出る目 | 1 | 2 | 3 | 4 | 5 | 6 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 確率 | 1/6 | 1/6 | 1/6 | 1/6 | 1/6 | 1/6 |
+
+サイコロの出る目を $X$ とすると、$X$ は確率変数と呼ばれます。確率変数は、確率分布に従って値をとる変数です。確率変数は、$X$ のように大文字のアルファベットで表します。一方、確率分布に従って値をとる具体的な値は、$x$ のように小文字のアルファベットで表します。
+
+確率変数 $X$ がとる値 $x$ の確率を $P(X = x)$ と表します。サイコロの出る目が1の場合、$P(X = 1)$ は1/6です。確率 $P(X = x)$ は、確率関数と呼ばれます。確率関数は、$f(x)$ のように小文字のアルファベットで表します。
+
+```{r}
+# 1から6までの整数を等確率で60個生成
+n <- 60
+dice_face <- sample(seq.int(6), size = n, replace = TRUE)
+# 各出目の頻度を確認
+table(dice_face)
+
+# nの数を多くするとどうなるか。1000から100000まで変えて実行してみよう
+# table(dice_face)/length(dice_face)
+# sum(table(dice_face)/length(dice_face))
+```
+
+**離散一様分布**の分布の形
+
+```{r}
+x <- seq.int(6)
+# 一様分布の確率関数
+y <- dunif(x, 1, 6)
+plot(x, y, 
+     type = "h", 
+     lwd = 3, 
+     col = "#0cb3d1", 
+     ylim = c(0, 0.2), 
+     xlab = "サイコロの出る目", 
+     ylab = "確率",
+     main = "サイコロの出る目の離散一様分布")
+```
+
+**二項分布**の分布の形
+
+```{r}
+# 成功確率
+p <- 0.5
+# 試行回数
+n <- 10
+# 二項分布の確率関数を計算する範囲
+x <- 0:n
+
+# 二項分布の確率関数を計算
+prob <- dbinom(x, size = n, prob = p)
+
+# グラフ描画
+plot(x, prob, type = "h",
+     ylab = "確率", 
+     xlab = "成功の回数",
+     main = paste0("二項分布（試行回数 =", n, "成功確率 =", p, "）"),
+     lwd = 3, 
+     col = "#0cb3d1")
+
+# 成功確率を1までの範囲で変化させた場合の二項分布を描いてみよう
+```
+
+### 確率密度関数
+
+正規分布の分布の形
+
+```{r}
+# xの範囲を設定
+x <- seq(-5, 5, by = 0.1)
+y1 <- dnorm(x, mean = 0, sd = 1)
+# グラフを描画
+plot(x, y1, type = "l", 
+     lwd = 3,
+     col = "#57467b",
+     ylim = c(0, 0.5), 
+     xlab = "x", 
+     ylab = "Density", 
+     main = "正規分布")
+
+# 平均0で分散がそれぞれ0.2、5の
+# 正規分布の確率密度関数を計算
+y2 <- dnorm(x, mean = 0, sd = sqrt(0.2))
+y3 <- dnorm(x, mean = 0, sd = sqrt(5))
+plot(x, y1, type = "l", 
+     lwd = 3,
+     col = "#57467b",
+     ylim = c(0, max(c(y1, y2, y3))), 
+     xlab = "x", 
+     ylab = "Density", 
+     main = "正規分布")
+lines(x, y2, lwd = 3, col = "#7cb4b8")
+lines(x, y3, lwd = 3, col = "#70f8ba")
+```
+
+## 期待値と分散
+
+確率における期待値とは、確率変数 $X$ が取りうる値 $x$ とその確率 $P(X = x)$ の積の総和を表します。期待値は以下の式で定義されます。
+
+$$
+E(X) = \sum_{x} xP(X = x)
+$$
+
+期待値が確率分布の重心を表すのに対して、分散は確率変数 $X$ がどれくらいばらついているかを表す指標です。分散は以下の式で定義されます。
+
+$$
+V(X) = E[(X - \mu)^2]
+$$
+
+サイコロの出る目の期待値と分散を計算してみましょう。
+
+```{r}
+# 1から6までの出目
+dice_x <- seq.int(6)
+
+# 1回の試行（サイコロ投げを行う）
+sample(dice_x, size = 1)
+
+sample(dice_x, size = 1)
+
+set.seed(20230522) # 結果に再現性をもたせる
+sample(dice_x, size = 1)
+set.seed(20230522); sample(dice_x, size = 1) # 上記の結果と同じ値 1 を得る
+
+# 各出目の確率
+probabilities <- rep(1/6, 6)
+# 期待値の計算
+(expected_value <- sum(dice_x * probabilities))
+# 分散の計算
+sum(((dice_x - expected_value)^2) * probabilities)
+```
+
+以下は、シミュレーションによって期待値と分散を計算する方法です。
+
+```{r}
+# サイコロ投げを10回行う
+# replace = TRUE 繰り返し同じ値（目）が出ても良いとする
+set.seed(123); res <- sample(dice_x, size = 10, replace = TRUE)
+table(res)
+
+mean(res) # 期待値
+sum(((dice_x - mean(res))^2) * rep(1/6, 6)) # 分散
+```
+
+ここから試行回数を増やしていきます。
+
+```{r}
+tibble::tibble(frequency = res) |> 
+  ggplot() +
+  aes(frequency) +
+  geom_histogram(bins = 6) +
+  labs(title = "roll a die 10 times") +
+  xlab("dice face")
+```
+
+```{r}
+set.seed(123); res <- sample(dice_x, size = 1000, replace = TRUE)
+tibble::tibble(frequency = res) |> 
+  ggplot() +
+  aes(frequency) +
+  geom_histogram(bins = 6) +
+  labs(title = "roll a die 1000 times") +
+  xlab("dice face")
+```
+
+```{r}
+mean(res) # 期待値
+sum(((dice_x - mean(res))^2) * rep(1/6, 6)) # 分散
+```
+
+さらに試行回数を増やします。
+
+```{r}
+# 10万回
+set.seed(123); res <- sample(dice_x, size = 100000, replace = TRUE)
+tibble::tibble(frequency = res) |> 
+  ggplot() +
+  aes(frequency) +
+  geom_histogram(bins = 6) +
+  labs(title = "roll a die 100000 times") +
+  xlab("dice face")
+```
+
+```{r}
+mean(res) # 期待値
+sum(((dice_x - mean(res))^2) * rep(1/6, 6)) # 分散
+
+# 1が出たときの確率
+sum(dice_x == 1) / length(dice_x) # 1/6
+```
+
+
+## 中心極限定理
+
+中心極限定理とは、母集団がどのような分布であっても、標本平均の分布は標本サイズが大きくなるにつれて正規分布に近づくという定理です。
+
+Rでのシミュレーションにより、これまで扱った確率分布について、中心極限定理を確認します。
+
+```{r}
+n <- 200
+# 二項分布の確率質量関数を計算する範囲
+x <- 0:n
+prob <- dbinom(x, size = n, prob = 0.5)
+
+# グラフ描画
+plot(x, prob, type = "h",
+     ylab = "確率", 
+     xlab = "成功の回数",
+     main = "二項分布のグラフに正規分布の曲線を重ねる",
+     lwd = 3, 
+     col = "#0cb3d1")
+# 正規分布の曲線を重ねる
+curve(dnorm(x, mean = 100, sd = sqrt(200 * 0.5 * 0.5)), 
+      add = TRUE, 
+      lwd = 2, 
+      col = "#f25d02")
+```
+
+`sqrt(200 * 0.5 * 0.5)` の理由は、二項分布の分散が $np(1-p)$ であることから、標準偏差は $\sqrt{np(1-p)}$ となるためです。
+
+```{r}
+# 一様分布での例
+# 標本サイズ
+n <- 1000
+# 試行回数
+m <- 10000
+# 標本平均を格納するベクトル
+x <- rep(NA, m)
+for (i in 1:m) {
+  x[i] <- mean(runif(n, min = 0, max = 1))
+}
+hist(x, 
+     breaks = 40, 
+     freq = FALSE, 
+     main = "一様分布のグラフに正規分布の曲線を重ねる",
+     ylim = c(0, 50),
+     col = "#0cb3d1")
+# 正規分布の曲線を重ねる
+curve(dnorm(x, mean = 0.5, sd = sqrt(1 / 12 / n)), 
+      add = TRUE, 
+      lwd = 2, 
+      col = "#f25d02")
+```
+
+### 標準化
+
+ある変数が取り得る値を、平均0、標準偏差1の値に変換することを標準化といいます。標準化を行うことで、異なる変数の値を単位に依存せずに比較することができます。
+
+標準化は以下の式で定義されます。
+
+$$
+z = \frac{x - \mu}{\sigma}
+$$
+
+```{r}
+# アヤメの萼片の長さについて、1件目のデータを標準化
+(iris$Sepal.Length[1] - mean(iris$Sepal.Length)) / sd(iris$Sepal.Length)
+```
+
+`scale()`関数を使って標準化を行うこともできます。
+
+```{r}
+x <- scale(iris$Sepal.Length)
+x
+
+# 先ほどの結果と同じ値を得られているか確認
+x[1]
+```
