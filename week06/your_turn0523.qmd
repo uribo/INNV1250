@@ -57,7 +57,7 @@ at_bats <- c("アウト", "アウト", "アウト",
 # 打率3割
 sum(at_bats == "ヒット") / length(at_bats)
 
-sample(at_bats, size = 3, replace = FALSE)
+sample(at_bats, size = 3, replace = TRUE)
 ```
 
 
