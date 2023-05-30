@@ -1,6 +1,9 @@
 ---
 title: データと確率
 keep-ipynb: true
+execute: 
+  eval: true
+  echo: true
 jupyter:
   jupytext:
     formats: 'ipynb,qmd'
@@ -13,8 +16,6 @@ jupyter:
     display_name: R
     language: R
     name: ir
-eval: true
-echo: true
 ---
 
 
