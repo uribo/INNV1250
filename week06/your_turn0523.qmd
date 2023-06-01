@@ -2,6 +2,9 @@
 title: 【課題】確率・期待値についてのクイズ
 format: html
 keep-ipynb: true
+execute: 
+  eval: true
+  echo: true
 jupyter:
   jupytext:
     formats: 'ipynb,qmd'
@@ -14,8 +17,6 @@ jupyter:
     display_name: R
     language: R
     name: ir
-eval: false
-echo: true
 ---
 
 ::: {.callout-important}
