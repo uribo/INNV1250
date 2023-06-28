@@ -54,6 +54,7 @@ coefficients(model)
 
 ```{r}
 # 回帰直線の追加
+plot(temperature, icecream_sales)
 abline(model)
 ```
 
