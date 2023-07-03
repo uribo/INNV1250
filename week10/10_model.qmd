@@ -2,8 +2,6 @@
 title: 統計モデリング
 format: html
 lang: ja
-execute: 
-  eval: false
 ascii: false
 keep-ipynb: true
 jupyter:
@@ -37,16 +35,12 @@ plot(temperature, icecream_sales)
 ```
 
 ```{r}
-#| eval: false
-#| echo: true
 # 単回帰モデルの構築
 # lm()関数の引数に 目的変数 ~ 説明変数 の形式で指定する
-model <- lm(formula = ___ + ___)
+model <- lm(formula = icecream_sales ~ temperature)
 ```
 
 ```{r}
-#| eval: false
-#| echo: true
 # intercept... 切片
 # coefficient... 傾き（係数）
 coefficients(model)
@@ -86,22 +80,68 @@ summary(model)
 ```{r}
 # 『データ解析のための統計モデリング入門』（久保2012）からデータを利用
 # 植物の種子数と体サイズについての架空のデータ
-d <- read.csv("https://kuboweb.github.io/-kubo/stat/iwanamibook/fig/poisson/data3a.csv")
+d <- 
+  readr::read_csv("https://kuboweb.github.io/-kubo/stat/iwanamibook/fig/poisson/data3a.csv",
+                  col_types = "ddc") |> 
+  dplyr::mutate(f = dplyr::case_match(
+    f,
+    "C" ~ "Control",
+    "T" ~ "Treatment"))
 
 head(d)
 # y... 植物の種子数
 # x... 体サイズ
-# f... 施肥処理（c... 処理なし、t... 処理あり）
+# f... 施肥処理（Control... 処理なし、Treatment... 処理あり）
 ```
 
 ```{r}
-model <- glm(formula = ___, data = ___)
+#| label: 体サイズと種子数の散布図
+library(ggplot2)
+ggplot(d) +
+  aes(x, y) +
+  geom_point(aes(color = f)) +
+  xlab("Size") +
+  ylab("Number of seed") +
+  scale_color_manual(values = c("Control" = "#f25d02", 
+                                "Treatment" = "#0cb3d1"))
+```
+
+```{r}
+#| label: 施肥処理の違いに応じた種子数の箱ひげ図
+ggplot(d) +
+  aes(f, y) +
+  geom_boxplot(aes(color = f),
+               show.legend = FALSE) +
+  xlab("Size") +
+  ylab("Number of seed") +
+  scale_color_manual(values = c("Control" = "#f25d02", 
+                                "Treatment" = "#0cb3d1"))
+```
+
+```{r}
+#| label: 施肥処理の違いに応じた種子数の蜂群図（箱ひげ図の改良）
+#| eval: false
+#| echo: false
+library(ggbeeswarm)
+ggplot(d) +
+  aes(f, y) +
+  geom_quasirandom(aes(color = f),
+               show.legend = FALSE) +
+  xlab("Size") +
+  ylab("Number of seed") +
+  scale_color_manual(values = c("Control" = "#f25d02", 
+                                "Treatment" = "#0cb3d1"))
+```
+
+
+```{r}
+model <- glm(formula = y ~ x + f, data = d, family = poisson)
 summary(model)
 ```
 
 ```{r}
-predict(model, newdata = data.frame(x = 12, f = "C"), type = "response")
-predict(model, newdata = data.frame(x = 12, f = "T"), type = "response")
+predict(model, newdata = data.frame(x = 12, f = "Control"), type = "response")
+predict(model, newdata = data.frame(x = 12, f = "Treatment"), type = "response")
 ```
 
 
