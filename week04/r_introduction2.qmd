@@ -1,9 +1,23 @@
 ---
 title: "データ処理の手法"
-format: html
+keep-ipynb: true
+eval: false
+echo: true
+jupyter:
+  jupytext:
+    formats: 'ipynb,qmd'
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: '1.0'
+      jupytext_version: 1.14.5
+  kernelspec:
+    display_name: R
+    language: R
+    name: ir
 ---
 
-データサイエンスはあらゆる種類のデータを処理・分析し、そこから有益な価値を生み出すことを目的としています。そのためデータの種類や表現方法について理解しておくことは、データサイエンスの基礎を理解する上で重要です。データの種類は数値や文字だけでしょうか。この章ではデータの種類と表現方法について学びます。
+データサイエンスはあらゆる種類のデータを処理・分析し、そこから有益な価値を生み出すことを目的としています。そのためデータの種類や表現方法について理解しておくことは、データサイエンスの基礎を理解する上で重要です。データの種類は数値や文字だけでしょうか。ここではデータの種類と表現方法について学びます。
 
 ## ベクトル
 
@@ -61,6 +75,8 @@ c(1, 2, 3, TRUE, FALSE, NA)
 
 データフレームは行と列からなる表形式のデータ構造です。行はデータの個々の観測値を表し、列はデータの変数を表します。
 
+![データを表形式で表現](https://github.com/uribo/INNV1250/raw/main/img/dataframe.jpeg)
+
 データフレームは、複数のベクトルを組み合わせ、`data.frame()`関数を使って作成します。`data.frame()`関数の引数には、列名となるベクトルを指定します。列名は文字列で指定します。
 
 ```{r}
@@ -97,7 +113,8 @@ plot(df_zoo$body_weight_kg, df_zoo$body_length_cm)
 # ggplot2パッケージを用いた散布図の作成
 library(ggplot2)
 ggplot(data = df_zoo) +
-  aes(body_weight_kg, body_length_cm) + geom_point()
+  aes(body_weight_kg, body_length_cm) + 
+  geom_point()
 ```
 
 ### csvファイルの読み込み
