@@ -1,11 +1,11 @@
-install.packages("remotes")
-remotes::install_github("hrbrmstr/qrencoder")
+# install.packages("pak")
+# pak::pkg_install("hrbrmstr/qrencoder")
 library(qrencoder)
 
 x <- "https://github.com/uribo/INNV1250"
 
 
-png("out.png")
+png("img/qrcode.png")
 par(mar = c(0, 0, 0, 0))
 image(
   qrencode_raster(x),
