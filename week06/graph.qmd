@@ -23,7 +23,7 @@ echo: true
 #| label: このファイルで利用する不足パッケージのインストール
 #| eval: false
 #| echo: true
-install.packages(c("datasauRus", "ggbeeswarm", "gghighlight", 
+install.packages(c("gghighlight", 
                    "ggrepel", "palmerpenguins", "patchwork",
                    "zipangu"))
 install.packages("ssdse", 
@@ -34,8 +34,6 @@ install.packages("ssdse",
 library(dplyr, warn.conflicts = FALSE)
 library(ggplot2)
 library(patchwork) # 複数のグラフの配置調整
-library(datasauRus)
-library(ggbeeswarm) # 蜂群図
 library(gghighlight) # グラフの一部をハイライト
 library(ggrepel) # ラベル表示 (geom_text_repel, geom_label_repel)
 library(palmerpenguins)
@@ -74,26 +72,6 @@ anscombe_long |>
       geom_smooth(method = lm, se = FALSE)) |>
   wrap_plots(ncol = 4)
 ```
-
-::: {.callout-tip}
-
-アンスコムザウルス
-
-```{r}
-datasaurus_dozen |>
-  filter(dataset == "dino") |>
-  ggplot(aes(x = x, y = y)) +
-  geom_point()
-
-datasaurus_dozen |>
-  filter(dataset != "dino") |>
-  ggplot(aes(x = x, y = y, colour = dataset)) +
-  geom_point() +
-  theme(legend.position = "none") +
-  facet_wrap(~dataset, nrow = 2)
-```
-
-:::
 
 ## ggplot2によるグラフ作成
 
@@ -282,12 +260,6 @@ p_core +
   geom_violin()
 ```
 
-
-```{r}
-# ggbeeswarmパッケージによる蜂群図
-p_core +
-  geom_beeswarm()
-```
 
 ### ヒストグラム
 

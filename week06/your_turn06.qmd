@@ -1,0 +1,82 @@
+---
+title: 【課題】Rでのグラフ作成の基礎
+format: html
+keep-ipynb: true
+jupyter:
+  jupytext:
+    formats: 'ipynb,qmd'
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: '1.0'
+      jupytext_version: 1.14.5
+  kernelspec:
+    display_name: R
+    language: R
+    name: ir
+eval: false
+echo: true
+---
+
+::: {.callout-important}
+
+以下の2つの問題について、Rコードを記述してください。
+
+:::
+
+
+## 問題: 動物データ（df_aniaml）を用いて、体長と体重の散布図を描画せよ
+
+```{r}
+#| label: 動物データの読み込み
+df_animal <-
+  readr::read_csv("https://raw.githubusercontent.com/uribo/tokupon_ds/main/data-raw/tokushima_zoo_animals22.csv", col_types = "ccdd")
+```
+
+```{r}
+head(df_animal)
+```
+
+- 動物データは `df_animal` としてデータフレーム形式で保存されている。
+- 体長は`body_length_cm`、体重は`weight_kg`として変数に記録されている。
+- 散布図はx軸に`body_length_cm`、y軸に`weight_kg`を与えること。
+
+
+```{r}
+#| deletable: false
+#| eval: false
+#| echo: true
+# コードを記述してセルを実行
+# ヒント：以下に記載のコードの{}内に書かれた部分を変更してください（{}は削除して実行してください）
+
+library({グラフ作成用パッケージの読み込み})
+
+ggplot(data = {グラフ作成の対象とするデータフレーム}, 
+       aes(x = {x軸にする変数}, y = {y軸にする変数})) +
+  {散布図作成用の関数}()
+```
+
+## 問題: 2009年から2020年の四国4県の人口の時系列での推移を適切な方法で可視化せよ。塗り分け、凡例の表示等により、グラフ上のデータがどの県を示すかわかるようにすること。
+
+```{r}
+#| deletable: false
+#| label: SSDSEデータの読み込み
+# 以下のコードを実行して四国4県の人口データを用意します
+df_ssdse_b_shikoku <- 
+  tibble(year = rep(seq.int(2020, 2009), times = 4), 
+  prefecture = rep(c("Tokushima", "Kagawa","Ehime", "Kochi"), each = 12), 
+  population = c(719559, 728000, 736000, 744000, 750000, 755733, 
+  763000, 769000, 775000, 780000, 785491, 790000, 950244, 958000, 
+  963000, 968000, 973000, 976263, 980000, 985000, 989000, 992000, 
+  995842, 999000, 1334841, 1346000, 1357000, 1368000, 1377000, 
+  1385262, 1396000, 1406000, 1415000, 1424000, 1431493, 1438000, 
+  691527, 699000, 707000, 714000, 721000, 728276, 736000, 743000, 
+  751000, 758000, 764456, 769000))
+
+head(df_ssdse_b_shikoku, n = 3)
+```
+
+```{r}
+#| deletable: false
+# コードを記述してセルを実行
+```
