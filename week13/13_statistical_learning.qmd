@@ -23,7 +23,7 @@ jupyter:
 ```{r}
 #| eval: false
 #| echo: true
-install.packages("tidymodels")
+install.packages("caret")
 ```
 
 
@@ -37,14 +37,14 @@ penguins <-
 ```
 
 ```{r}
-library(tidymodels)
 library(dplyr, warn.conflicts = FALSE)
 penguins_df <- 
   penguins |> 
   # 性別が欠損値となる行を削除
   filter(!is.na(sex)) |> 
   # モデル中で利用しない変数の除外
-  select(!c(year, island))
+  select(!c(year, island)) |> 
+  mutate(sex = if_else(sex == "male", 1, 0))
 ```
 
 ### データの可視化
@@ -65,107 +65,72 @@ penguins_df |>
 ### データ分割
 
 
-データを訓練データとテストデータに分割する。各データに偏りがないように性別による層化抽出を行う。
+データを訓練データとテストデータに分割する。
 
 ```{r}
 set.seed(123)
-# 性別を層とする層化抽出
-# ref) 第7回「データと確率」
-penguin_split <- 
-  # 訓練データとテストデータの件数の比率をprop引数で指定
-  initial_split(penguins_df, strata = sex, prop = 3/4)
-penguin_train <- training(penguin_split)
-penguin_test <- testing(penguin_split)
+train_index <- 
+  sample(1:nrow(penguins_df), nrow(penguins_df) * 0.7)
+train_data <- penguins_df[train_index, ] # 訓練データ（７割）
+test_data <- penguins_df[-train_index, ] # テストデータ（３割）
 ```
 
 元のデータ、訓練データ、テストデータの性別の頻度を確認する。
 
 ```{r}
 count(penguins_df, sex)
-count(penguin_train, sex)
-count(penguin_test, sex)
-```
-
-### 特徴量エンジニアリング
-
-次の特徴量エンジニアリングを行う。
-
-- データの標準化
-- カテゴリ変数のダミー変数化
-
-```{r}
-penguins_rec <-
-  recipe(formula = sex ~ ., 
-         data = penguin_train) |> 
-  step_normalize(all_numeric()) |> 
-  step_dummy(all_nominal(), -sex, one_hot = TRUE)
-```
-
-```{r}
-# 訓練データがどのように変換されるかを確認する
-head(bake(prep(penguins_rec), new_data = NULL))
+count(train_data, sex)
+count(test_data, sex)
 ```
 
 ### ロジスティック回帰
 
 リンク関数がロジットで、誤差構造が二項分布の場合の一般化線形モデルを構築する。
 
-```{r}
-glm_spec <- 
-  logistic_reg() |>
-  set_engine("glm")
-```
-
-```{r}
-penguin_wf <- 
-  workflow() |> 
-  add_model(glm_spec) |> 
-  add_recipe(penguins_rec)
-```
-
 訓練データを用いてモデルを学習する。
 
 ```{r}
-penguins_fit <-
-  penguin_wf |> 
-  fit(data = penguin_train)
-
-penguins_fit
-```
-
-```{r}
-#| eval: false
-#| echo: true
-# 同じ結果となるのを確認
-glm(sex ~ .,
-    data = bake(prep(penguins_rec), new_data = NULL), 
-    family = binomial(link = "logit"))
+fit <- glm(formula = sex ~ ., data = train_data, family = binomial)
+summary(fit)
 ```
 
 学習したモデルを用いてテストデータから性別を予測する。
 
 ```{r}
-head(predict(penguins_fit, new_data = penguin_test))
+prob <- 
+  predict(fit, newdata = test_data, type = "response")
+predicted_class <- 
+  if_else(prob > 0.5, 1, 0)
+
+table(predicted_class, test_data$sex)
 ```
 
-```{r}
-# 分類を誤ったデータを確認
-predict(penguins_fit, new_data = penguin_test) |> 
-  bind_cols(penguin_test) |> 
-  filter(.pred_class != sex)
-```
 
 ### 性能評価
 
 テストデータを用いて学習したモデルの性能を評価する。
 
 ```{r}
-# 評価関数accuracy()により正解率を求める
 # 正解率はモデルが正しく予測したデータの割合を示す
-augment(penguins_fit, new_data = penguin_test |> 
-          mutate(sex = as.factor(sex))) |> 
-  accuracy(truth = sex, estimate = .pred_class)
+library(caret)
+x <- 
+  caret::confusionMatrix(factor(predicted_class), factor(test_data$sex))
+x
+plot(x$table, type = "heatmap", main = "Confusion Matrix")
 ```
+
+異なるモデルを考える
+
+```{r}
+fit2 <- glm(formula = sex ~ body_mass_g + species, data = train_data, family = binomial)
+prob2 <- 
+  predict(fit2, newdata = test_data, type = "response")
+predicted_class2 <- 
+  if_else(prob2 > 0.5, 1, 0)
+caret::confusionMatrix(factor(predicted_class2), factor(test_data$sex))
+
+```
+
 
 ## 教師なし学習: k-平均法
 
@@ -185,31 +150,29 @@ df_animal_tiny |>
   geom_point()
 ```
 
-tidymodelsの枠組みでクラスタリングを扱うtidyclustパッケージで行う。
-
+k-平均法で扱うデータは標準化しておく。
 
 ```{r}
-#| eval: false
-#| echo: true
-install.packages(c("tidyclust"))
+df_animal_scaled <- 
+  df_animal_tiny |> 
+  mutate(across(everything(), scale))
+
+head(df_animal_scaled)
 ```
 
+
 ```{r}
-library(tidyclust)
-kmeans_spec <-
-  k_means(num_clusters = 4) |>
-  set_engine("stats")
-kmeans_spec_fit <-
-  kmeans_spec |>
-  fit(~ ., data = df_animal_tiny)
-kmeans_spec_fit
+set.seed(123)
+fit_kmeans <- kmeans(df_animal_scaled, centers = 3)
+fit_kmeans$cluster
 ```
 
 クラスタリングの結果をプロットして確認する。
 
 ```{r}
-augment(kmeans_spec_fit,
-        df_animal_tiny) |>
+df_animal_scaled$.pred_cluster <- as.factor(fit_kmeans$cluster)
+
+df_animal_scaled |>
   ggplot() +
   aes(x = body_length_cm, y = weight_kg, colour = .pred_cluster) +
   geom_point()
